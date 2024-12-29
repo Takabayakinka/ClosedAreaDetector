@@ -1,0 +1,122 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class ClosedAreaDetector {
+
+    private static final int[][] directionsArray = new int[][]{{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
+
+    public static void Detect(int[][] stageArray) {
+
+        System.out.println("----------------------------------------------------------------");
+        System.out.println("Closed Area Detecting...");
+
+        int startId = 1;
+        int endId_x = stageArray[0].length - 1;
+        int endId_y = stageArray.length - 1;
+
+        List<Integer> allyPathsList = new ArrayList<>();
+        StringBuilder checkedPKS = new StringBuilder();
+
+        List<Integer> temp_resultPaths;
+        List<int[][]> resultPathsList = new ArrayList<>();
+
+        boolean breaking;
+
+        for (int x = startId; x < endId_x; x++) {
+            for (int y = startId; y < endId_y; y++) {
+
+                // 赤 && checkedに含まれていない
+                if (stageArray[y][x] == 0 && !checkedPKS.toString().contains(createPKS_2D(x, y))){
+                    allyPathsList.add(x);
+                    allyPathsList.add(y);
+                }
+
+                // allyが空だった場合
+                if (allyPathsList.isEmpty()) continue;
+
+                breaking = false;
+                temp_resultPaths = new ArrayList<>();
+
+                while (!allyPathsList.isEmpty()) {
+
+                    int ally_x = allyPathsList.get(0);
+                    int ally_y = allyPathsList.get(1);
+
+                    // 四方をチェック
+                    for (int dir = 0 ; dir < 4 ; dir++) {
+
+                        int adj_x = ally_x + directionsArray[dir][0];
+                        int adj_y = ally_y + directionsArray[dir][1];
+
+                        // 赤だった場合
+                        if (stageArray[adj_y][adj_x] == 0) {
+                            // 最外周をチェックした場合
+                            if (adj_x == 0 || adj_x == endId_x || adj_y == 0 || adj_y == endId_y) {
+                                breaking = true;
+                                continue;
+                            }
+
+                            // checkedに含まれていない場合
+                            if (!checkedPKS.toString().contains(createPKS_2D(adj_x, adj_y))) {
+                                allyPathsList.add(adj_x);
+                                allyPathsList.add(adj_y);
+                            }
+                        }
+
+                    }
+
+                    // checkedに追加
+                    checkedPKS.append(createPKS_2D(ally_x, ally_y));
+                    temp_resultPaths.add(ally_x);
+                    temp_resultPaths.add(ally_y);
+
+                    // ally - checked
+                    for (int id = 0; id < allyPathsList.size(); id += 2) {
+
+                        int id_x = allyPathsList.get(id);
+                        int id_y = allyPathsList.get(id + 1);
+
+                        if (checkedPKS.toString().contains(createPKS_2D(id_x, id_y))) {
+                            allyPathsList.remove(id);
+                            allyPathsList.remove(id);
+
+                            id += -2;
+                        }
+                    }
+                }
+
+                // 最外周に到達せず、allyが空になった場合
+                if (!breaking) {
+                    int[][] resultPaths = new int[temp_resultPaths.size() / 2][2];
+
+                    for (int id = 0; id < resultPaths.length; id++) {
+                        resultPaths[id][0] = temp_resultPaths.get(0);
+                        resultPaths[id][1] = temp_resultPaths.get(1);
+
+                        temp_resultPaths.removeFirst();
+                        temp_resultPaths.removeFirst();
+                    }
+
+                    resultPathsList.add(resultPaths);
+                }
+            }
+        }
+
+        if (resultPathsList.isEmpty()) {
+            System.out.println("There is no closed area in this stage.");
+            System.out.println();
+            return;
+        }
+
+        for (int i = 0; i < resultPathsList.size(); i++) {
+            System.out.println("Area " + i + ": " + Arrays.deepToString(resultPathsList.get(i)));
+        }
+
+        System.out.println();
+    }
+    private static String createPKS_2D(int x, int y){
+        return "x" + x + "y" + y;
+    }
+
+}
